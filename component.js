@@ -1,11 +1,5 @@
 import { getData, getRate } from './apiService';
-
-function formatNumber(n, locale = navigator.language, currency = 'USD') {
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency: currency,
-  }).format(n);
-}
+import { formatNumber } from './utils';
 
 const data = await getData();
 const rate = await getRate();
@@ -32,9 +26,10 @@ export class CurrencyTable extends HTMLElement {
       table {
         border-collapse: collapse;
         border: 1px solid black;
+        margin: 16px 0;
       }
       th {
-        background-color: #ccc;
+        background-color: #ccc;        
       }
       th, td {
         padding: 8px;
@@ -45,7 +40,7 @@ export class CurrencyTable extends HTMLElement {
     shadow.appendChild(style);
 
     const wrapper = document.createElement('div');
-    wrapper.textContent = 'Table of Currencies';
+    wrapper.textContent = 'According to Coindesk';
     const template = document.createElement('template');
     template.innerHTML = `
       <table>
@@ -56,8 +51,8 @@ export class CurrencyTable extends HTMLElement {
             <th>USD</th>
             <th>EURO</th>
             <th>GBP</th>
-            <th>Input</th>
-            <th>On hand</th>
+            <th>Holdings</th>
+            <th>Value on hand</th>
           </tr>
         </thead>
         <tbody id="body">
@@ -77,13 +72,13 @@ export class CurrencyTable extends HTMLElement {
         <td id="euro"></td>
         <td id="gbp"></td>
         <td>
-          <input id="input" placeholder="How many..." type="number"/>
+          <input id="input" placeholder="Enter amount..." type="number"/>
         </td>
         <td id="product"></td>
       </tr>
     `;
-    console.log('tbody ', tbody);
-    for (let i = 0; i < currencyData.length; i++) {
+
+    for (let i = 0; i < currencyData.length - 24; i++) {
       const item = currencyData[i];
       const rowContent = rowTemplate.content.cloneNode(true);
       const isoCell = rowContent.querySelector('#iso');
@@ -102,13 +97,11 @@ export class CurrencyTable extends HTMLElement {
       const euroCell = rowContent.querySelector('#euro');
       euroCell.textContent = formatNumber(
         item.price.toFixed(2) * rate.rates.EUR,
-        navigator.language,
         'Eur'
       );
       const gpbCell = rowContent.querySelector('#gbp');
       gpbCell.textContent = formatNumber(
         item.price.toFixed(2) * rate.rates.GBP,
-        navigator.language,
         'Gbp'
       );
 
@@ -118,7 +111,6 @@ export class CurrencyTable extends HTMLElement {
         // todo: error handling
         product.textContent = formatNumber(
           item.price * ev.target.value * rate.rates[currency.toUpperCase()],
-          navigator.language,
           currency
         );
       });
